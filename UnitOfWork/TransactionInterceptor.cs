@@ -30,7 +30,7 @@ namespace UnitOfWork
         public void Intercept(IInvocation invocation)
         {
             var method = invocation.MethodInvocationTarget ?? invocation.Method;
-            // 如果标记了 [Transaction]
+            // 如果业务方法已添加注解[Transaction]
             if (method.GetCustomAttributes(true).FirstOrDefault(x => x.GetType() == typeof(TransactionAttribute)) is TransactionAttribute)
             {
                 //执行原有方法之前

@@ -1,16 +1,20 @@
-﻿using Castle.DynamicProxy;
+﻿using Autofac;
+using Autofac.Extras.DynamicProxy;
+using Castle.DynamicProxy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Linq;
+using System.Reflection;
 
 namespace UnitOfWork
 {
     public static class ServiceCollectionExtensions
     {
+        #region
+
         /// <summary>
-        /// 这种方式不适合批量添加动态代理
-        /// https://www.cnblogs.com/willardzmh/articles/14393701.html
-        /// https://www.cnblogs.com/kasnti/p/12244544.html
+        /// 业务层单个注入事务拦截器
         /// </summary>
         /// <typeparam name="TInterface"></typeparam>
         /// <typeparam name="TImplementation"></typeparam>
@@ -45,18 +49,50 @@ namespace UnitOfWork
         }
 
         /// <summary>
-        /// 添加数据库事务，在使用注解[Transaction]之前，必须添加该服务到容器中
+        /// 添加事务服务，结合AddProxiedScoped()方法使用
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddTransaction(this IServiceCollection services)
+        public static IServiceCollection AddTransactionService(this IServiceCollection services)
         {
-            //https://www.cnblogs.com/sheng-jie/p/7416302.html
+            services.AddSingleton(new ProxyGenerator());
             services.AddScoped<IInterceptor, TransactionInterceptor>();
-            //https://www.cnblogs.com/hezp/p/11434046.html
-            services.AddSingleton<ProxyGenerator>();
+
             return services;
         }
+
+        #endregion
+
+        #region
+
+        /// <summary>
+        /// 业务层批量注入事务拦截器
+        /// 请在需要拦截的业务方法上添加注解[Transaction]
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="serviceAssemblyName">业务层程序集名称</param>
+        public static void AddTransactionService(this ContainerBuilder builder, string serviceAssemblyName)
+        {
+            /// https://www.cnblogs.com/willardzmh/articles/14393701.html
+            /// https://www.cnblogs.com/kasnti/p/12244544.html
+            /// https://www.cnblogs.com/hezp/p/11434046.html
+            /// https://www.cnblogs.com/sheng-jie/p/7416302.html
+
+            //注册拦截器
+            builder.RegisterType<TransactionInterceptor>().AsSelf();
+
+            //注册业务层，同时对业务层的方法进行事务拦截
+            builder.RegisterAssemblyTypes(Assembly.Load(serviceAssemblyName))
+                .AsImplementedInterfaces().InstancePerLifetimeScope()
+                .EnableInterfaceInterceptors()//引用Autofac.Extras.DynamicProxy;
+                .InterceptedBy(new Type[] { typeof(TransactionInterceptor) });
+
+            //业务层注册拦截器也可以使用[Intercept(typeof(TransactionInterceptor))]加在类上，但是上面的方法比较好，没有侵入性
+        }
+
+        #endregion
+
+        #region
 
         /// <summary>
         /// Registers the unit of work given context as a service in the <see cref="IServiceCollection"/>.
@@ -74,5 +110,23 @@ namespace UnitOfWork
 
             return services;
         }
+
+        /// <summary>
+        /// Registers the base repository as a service in the <see cref="IServiceCollection"/>.
+        /// </summary>
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
+        /// <typeparam name="TRepository">The type of the base repositry.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+        /// <returns>The same service collection so that multiple calls can be chained.</returns>
+        public static IServiceCollection AddBaseRepository<TEntity, TRepository>(this IServiceCollection services)
+            where TEntity : class
+            where TRepository : class, IBaseRepository<TEntity>
+        {
+            services.AddScoped<IBaseRepository<TEntity>, TRepository>();
+
+            return services;
+        }
+
+        #endregion
     }
 }

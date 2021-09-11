@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>My.EntityFrameworkCore.UnitOfWork</PackageId>
+    <Version>3.1.18</Version>
+    <Authors>im.jp@outlook.com;</Authors>
+    <Product>My.EntityFrameworkCore.UnitOfWork</Product>
+    <Description>A plugin for Microsoft.EntityFrameworkCore and Dapper to support repository, unit of work patterns.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/jinjupeng/UnitOfWork</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jinjupeng/UnitOfWork.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Entity Framework Core;entity-framework-core;Dapper;EF;Data;O/RM;unitofwork;Unit Of Work;unit-of-work</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

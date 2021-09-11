@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
@@ -12,10 +13,42 @@ namespace UnitOfWork
     {
         private readonly TDbContext _dbContext;
         private bool _disposed = false;
+        protected Dictionary<Type, object> repositories;
 
         public UnitOfWork(TDbContext context)
         {
             _dbContext = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        /// <summary>
+        /// Gets the specified repository for the <typeparamref name="TEntity"/>.
+        /// </summary>
+        /// <param name="hasBaseRepository"><c>True</c> if providing custom repositry</param>
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
+        /// <returns>An instance of type inherited from <see cref="IBaseRepository{TEntity}"/> interface.</returns>
+        public IBaseRepository<TEntity> GetRepository<TEntity>(bool hasBaseRepository = false) where TEntity : class
+        {
+            if (repositories == null)
+            {
+                repositories = new Dictionary<Type, object>();
+            }
+
+            if (hasBaseRepository)
+            {
+                var customRepo = _dbContext.GetService<IBaseRepository<TEntity>>();
+                if (customRepo != null)
+                {
+                    return customRepo;
+                }
+            }
+
+            var type = typeof(TEntity);
+            if (!repositories.ContainsKey(type))
+            {
+                repositories[type] = new BaseRepository<TEntity>(_dbContext);
+            }
+
+            return (IBaseRepository<TEntity>)repositories[type];
         }
 
         public int SaveChanges()
@@ -97,6 +130,13 @@ namespace UnitOfWork
             {
                 if (disposing)
                 {
+                    // clear repositories
+                    if (repositories != null)
+                    {
+                        repositories.Clear();
+                    }
+
+                    // dispose the db context.
                     _dbContext.Dispose();
                 }
             }

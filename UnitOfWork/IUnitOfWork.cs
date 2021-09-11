@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,6 +9,13 @@ namespace UnitOfWork
 {
     public interface IUnitOfWork : IDisposable
     {
+        /// <summary>
+        /// 获取指定仓储
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="hasBaseRepository">如有自定义仓储设为True</param>
+        /// <returns></returns>
+        IBaseRepository<TEntity> GetRepository<TEntity>(bool hasBaseRepository = false) where TEntity : class;
 
         int SaveChanges();
 
