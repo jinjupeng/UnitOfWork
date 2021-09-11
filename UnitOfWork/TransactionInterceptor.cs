@@ -47,14 +47,17 @@ namespace UnitOfWork
                     if (method.ReturnType.IsAsyncType())
                     {
                         var task = method.Invoke(invocation.InvocationTarget, invocation.Arguments) as Task;
-                        task.ContinueWith(x => {
+                        task.ContinueWith(x =>
+                        {
                             if (x.Status == TaskStatus.RanToCompletion)
                             {
-                                trans.Commit();
+                                _logger.LogInformation(new EventId(trans.GetHashCode()), "Transaction Commit");
+                                trans.CommitAsync();
                             }
                             else
                             {
-                                trans.Rollback();
+                                _logger.LogInformation(new EventId(trans.GetHashCode()), "Transaction Rollback");
+                                trans.RollbackAsync();
                             }
                         }).ConfigureAwait(false);
                         invocation.ReturnValue = task;
@@ -65,7 +68,6 @@ namespace UnitOfWork
                         invocation.Proceed();
                         if (trans != null)
                         {
-                            _logger.LogInformation(new EventId(trans.GetHashCode()), "Transaction Commit");
                             trans.Commit();
                         }
                     }
