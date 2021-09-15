@@ -127,6 +127,18 @@ namespace UnitOfWork
             return services;
         }
 
+        /// <summary>
+        /// 添加泛型仓储
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddBaseRepository(this IServiceCollection services)
+        {
+            services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+
+            return services;
+        }
+
         #endregion
     }
 }
