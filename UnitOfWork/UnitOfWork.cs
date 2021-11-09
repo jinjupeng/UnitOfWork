@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace UnitOfWork
@@ -59,19 +60,6 @@ namespace UnitOfWork
         public Task<int> SaveChangesAsync()
         {
             return _dbContext.SaveChangesAsync();
-        }
-
-        public Task<IEnumerable<TEntity>> QueryAsync<TEntity>(string sql, object param = null, IDbContextTransaction trans = null) where TEntity : class
-        {
-            var conn = GetConnection();
-            var result = conn.QueryAsync<TEntity>(sql, param, trans?.GetDbTransaction());
-            return result;
-        }
-
-        public async Task<int> ExecuteAsync(string sql, object param, IDbContextTransaction trans = null)
-        {
-            var conn = GetConnection();
-            return await conn.ExecuteAsync(sql, param, trans?.GetDbTransaction());
         }
 
         /// <summary>
@@ -158,6 +146,27 @@ namespace UnitOfWork
                 CurrentTransaction.Rollback();
             }
             HasCommitted = true;
+        }
+
+
+        public async Task<IReadOnlyList<T>> QueryAsync<T>(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default)
+        {
+            return (await GetConnection().QueryAsync<T>(sql, param, transaction?.GetDbTransaction())).AsList();
+        }
+
+        public async Task<T> QueryFirstOrDefaultAsync<T>(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default)
+        {
+            return await GetConnection().QueryFirstOrDefaultAsync<T>(sql, param, transaction?.GetDbTransaction());
+        }
+
+        public async Task<T> QuerySingleAsync<T>(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default)
+        {
+            return await GetConnection().QuerySingleAsync<T>(sql, param, transaction?.GetDbTransaction());
+        }
+
+        public async Task<int> ExecuteAsync(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default)
+        {
+            return await GetConnection().ExecuteAsync(sql, param, transaction?.GetDbTransaction());
         }
     }
 }

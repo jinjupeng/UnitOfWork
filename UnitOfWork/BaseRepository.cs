@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -40,12 +41,6 @@ namespace UnitOfWork
         {
             _context.UpdateRange(t);
         }
-
-        public IQueryable<T> ExecSql(string sql)
-        {
-            return _context.Set<T>().FromSqlRaw(sql).AsNoTracking().AsQueryable();
-        }
-
 
         public IQueryable<T> GetModels(Expression<Func<T, bool>> whereLambda)
         {

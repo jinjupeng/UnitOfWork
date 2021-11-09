@@ -14,7 +14,6 @@ namespace UnitOfWork
         void DeleteRange(IEnumerable<T> t);
         void DeleteRange(Expression<Func<T, bool>> expression);
         void UpdateRange(IEnumerable<T> t);
-        IQueryable<T> ExecSql(string sql);
 
         IQueryable<T> GetModels(Expression<Func<T, bool>> whereLambda);
         IQueryable<T> QueryByPage<TKey>(int pageIndex, int pageSize, Expression<Func<T, bool>> whereLambda, Expression<Func<T, TKey>> orderBy);

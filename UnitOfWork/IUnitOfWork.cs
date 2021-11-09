@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
+﻿using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace UnitOfWork
@@ -21,31 +21,6 @@ namespace UnitOfWork
 
         Task<int> SaveChangesAsync();
 
-        #region command sql
-
-        /// <summary>
-        /// 查询
-        /// 用法:await _unitOfWork.QueryAsync`Demo`("select id,title from post where id = @id", new { id = 1 });
-        /// </summary>
-        /// <typeparam name="TEntity"></typeparam>
-        /// <param name="sql">sql语句</param>
-        /// <param name="param">参数</param>
-        /// <param name="trans"></param>
-        /// <returns></returns>
-        Task<IEnumerable<TEntity>> QueryAsync<TEntity>(string sql, object param = null, IDbContextTransaction trans = null) where TEntity : class;
-
-        /// <summary>
-        /// ExecuteAsync
-        /// 用法:await _unitOfWork.ExecuteAsync("update post set title =@title where id =@id", new { title = "", id=1 });
-        /// </summary>
-        /// <typeparam name="TEntity"></typeparam>
-        /// <param name="sql">sql语句</param>
-        /// <param name="param">参数</param>
-        /// <param name="trans"></param>
-        /// <returns></returns>
-        Task<int> ExecuteAsync(string sql, object param, IDbContextTransaction trans = null);
-
-        #endregion
 
         IDbContextTransaction CurrentTransaction { get; }
 
@@ -80,5 +55,19 @@ namespace UnitOfWork
         /// </summary>
         /// <returns></returns>
         IDbConnection GetConnection();
+
+
+
+        #region command sql
+
+        Task<IReadOnlyList<T>> QueryAsync<T>(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default);
+
+        Task<T> QueryFirstOrDefaultAsync<T>(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default);
+
+        Task<T> QuerySingleAsync<T>(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default);
+
+        Task<int> ExecuteAsync(string sql, object param = null, IDbContextTransaction transaction = null, CancellationToken cancellationToken = default);
+
+        #endregion
     }
 }
